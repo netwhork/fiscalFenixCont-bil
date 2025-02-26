@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICMS Industria</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #calculos-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .calculo {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            max-width: 350px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ICMS IND <span style="color: #5fc019; font-size: 45px;">Rosangela da silva</span> </h1>
+        <div id="calculos-container">
+            <!-- Primeiro cálculo -->
+            <div class="calculo" data-index="1">
+                <h2>Cálculo 1</h2>
+                <h2>Cálcular MVA 35,45%</h2>
+                <input type="text" class="vl-produtos" oninput="calcularCenario(1)">
+                <label>Porcentagem MVA:</label>
+                <input type="text" class="alq-mva" value="35,45%" readonly>
+                <label>Aliquota ICMS:</label>
+                <input type="text" class="alq-mva" value="17%" readonly>
+                <label>Valor Guia:</label>
+                <input type="text" class="valor-guia" readonly>
+            </div>
+
+            <!-- Segundo cálculo -->
+            <div class="calculo" data-index="2">
+                <h2>Cálculo 2</h2>
+                <h2>Cálcular MVA 45,52%</h2>
+                <input type="text" class="vl-produtos" oninput="calcularCenario(2)">
+                <label>Porcentagem MVA:</label>
+                <input type="text" class="alq-mva" value="45,52%" readonly>
+                <label>Aliquota ICMS:</label>
+                <input type="text" class="alq-mva" value="17%" readonly>
+                <label>Valor Guia:</label>
+                <input type="text" class="valor-guia" readonly>
+            </div>
+        </div>
+
+        <h2>Total dos Valores Guia:</h2>
+        <input type="text" id="total-valor-guia" readonly>
+
+
+        <!-- Botão de Voltar -->
+        <button class="voltar-btn" onclick="voltarPagina()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; margin-top: 20px;">Voltar</button>
+
+    </div>
+    <footer>
+        <h1>Automação com Puppeteer e Electron</h1>
+
+        <button onclick="executarScript('GUIA_R.js')">CRIAR A PARTIR DO DAS.js</button><br> <!-- Novo botão para o DAS -->
+
+        <p id="status"></p>
+    </footer>
+
+    <script src="renderer.js"></script>
+    <script>
+        function voltarPagina() {
+            // Volta para a página anterior
+            window.history.back();
+        }
+        const resultados = [0, 0]; // Armazena os valores dos cálculos
+        const ALIQUOTA_ORIGEM = 0.17; // Alíquota fixa de 17%
+
+        // Função para calcular os valores de um cenário
+        function calcularCenario(index) {
+            const container = document.querySelector(`.calculo[data-index="${index}"]`);
+            const vlProdutos = parseFloat(container.querySelector('.vl-produtos').value.replace(/[.]/g, '').replace(',', '.')) || 0;
+            const alqMvaInput = container.querySelector('.alq-mva').value;
+            const alqMva = parseFloat(alqMvaInput.replace(',', '.').replace('%', '')) || 0;
+
+            // Cálculo do resultado
+            const baseCalculo = vlProdutos * (1 + (alqMva / 100));
+            const alqIcms = 17 / 100; // Alíquota interna fixa de 17%
+            const valorCredito = baseCalculo * alqIcms;
+
+            // Valor Guia
+            const valorGuia = valorCredito - (vlProdutos * ALIQUOTA_ORIGEM);
+            container.querySelector('.valor-guia').value = valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+            // Atualiza o array de resultados
+            resultados[index - 1] = valorGuia;
+
+            // Recalcula o total
+            calcularTotal();
+        }
+
+        // Função para calcular o total dos valores guia
+        function calcularTotal() {
+            const total = resultados.reduce((acc, curr) => acc + curr, 0);
+            document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+    </script>
+
+
+</body>
+
+</html>

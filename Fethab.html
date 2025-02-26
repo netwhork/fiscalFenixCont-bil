@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FETHAB</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #e0f7fa;
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 4px;
+            margin-top: 10px;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.5s ease-in-out;
+            transition: transform 0.3s ease-out;
+        }
+
+        .toast.error {
+            background-color: #d32f2f;
+            border-left: 5px solid #b71c1c;
+        }
+
+        .toast.success {
+            background-color: #388e3c;
+            border-left: 5px solid #1b5e20;
+        }
+
+        .toast .toast-content {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .toast .toast-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .toast .toast-message {
+            font-size: 0.9em;
+        }
+
+        .toast .toast-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0 5px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-table {
+            width: 100%;
+            background-color: #336699;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header-table td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        .input-mode {
+            text-align: center;
+            margin: 30px 0;
+            padding: 15px 0;
+        }
+
+        .input-mode label {
+            margin: 0 15px;
+            cursor: pointer;
+        }
+
+        .main-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .main-table td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+        .main-table td:first-child {
+            text-align: right;
+            width: 200px;
+            padding-right: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="date"] {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Estilo para área de drag and drop */
+        .drop-zone {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .drop-zone:hover {
+            border-color: #4CAF50;
+            background-color: #f1f8e9;
+        }
+
+        .drop-zone.dragover {
+            border-color: #4CAF50;
+            background-color: #f1f8e9;
+        }
+
+        .drop-zone-text {
+            font-size: 1.2em;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Modal personalizado */
+        .loading-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .spinner-border {
+            margin-right: 10px;
+        }
+
+        /* Estilo para o input de metros cúbicos */
+        .metros-cubicos-input {
+            text-align: right;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <table class="header-table">
+            <tr>
+                <td colspan="2">Sistema de Arrecadação</td>
+            </tr>
+            <tr>
+                <td colspan="2">Pessoa Jurídica Inscrita</td>
+            </tr>
+        </table>
+
+        <div class="input-mode">
+            <input type="radio" id="manual-input" name="input-mode" value="manual" checked onchange="toggleMode(this)">
+            <label for="manual-input">Informar Manual</label>
+            
+            <input type="radio" id="xml-input" name="input-mode" value="xml" onchange="toggleMode(this)">
+            <label for="xml-input">Inserir XML</label>
+        </div>
+
+        <div id="manual-section">
+            <table class="main-table">
+                <tr>
+                    <td>Período de referência:</td>
+                    <td><input type="text" id="periodo-referencia" placeholder="MM/AAAA"></td>
+                </tr>
+                <tr>
+                    <td>Tipo de Venda:</td>
+                    <td>
+                        <input type="radio" id="tipo1" name="tipoVenda" value="1">
+                        <label for="tipo1">1- Dar-1 TRIBUTOS DA APURAÇÃO NORMAL E TAXAS</label><br>
+                        <input type="radio" id="tipo2" name="tipoVenda" value="2">
+                        <label for="tipo2">2- Dar-1 TRIBUTOS A SEREM PAGOS NO ATO DA SAÍDA</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Especificação da receita:</td>
+                    <td>
+                        <select>
+                            <option>7239 - FETHAB MADEIRA LEI 10818/19</option>
+                            <option>8097 - CONTRIB ENTIDADE REPRES MADEIRA</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Data de vencimento:</td>
+                    <td><input type="date"></td>
+                </tr>
+                <tr>
+                    <td>Quantidade de Metros Cúbicos:</td>
+                    <td>
+                        <input type="text" 
+                               id="metros-cubicos" 
+                               class="metros-cubicos-input"
+                               maxlength="6" 
+                              placeholder="00,000"
+                               oninput="formatarMetrosCubicos(this)"
+                               onchange="calcularTributo()">
+                           
+                            </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Valor Tributo:</td>
+                    <td><input type="text" id="valor-tributo" readonly></td>
+                </tr>
+                <tr>
+                    <td>Informações Previstas em Instruções:</td>
+                    <td><textarea class="info-box"></textarea></td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="xml-section" class="hidden">
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-zone-text">
+                    Arraste e solte o XML aqui<br>
+                    ou clique para selecionar o arquivo
+                </div>
+                <input type="file" id="file-input" accept=".xml" style="display: none">
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button onclick="emitirGuia()">Emitir</button>
+            <button onclick="voltarPagina()">Retornar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Carregamento -->
+    <div class="loading-modal" id="loading-modal">
+        <div class="loading-content">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <span>Lendo arquivo XML...</span>
+        </div>
+    </div>
+ <!-- Add toast container -->
+ <div class="toast-container" id="toast-container"></div>
+    <!-- Bootstrap JS e dependências -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+ const MULTIPLICADOR = 24.349;
+
+// Configuração do drag and drop
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const loadingModal = document.getElementById('loading-modal');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'text/xml') {
+        processarXML(file);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        processarXML(file);
+    }
+});
+
+function formatarMetrosCubicos(input) {
+    // Remove all non-digit characters
+    //let value = input.value.replace(/\D/g, '');
+    
+    // Pad with zeros if necessary to maintain 5 digits
+    while (value.length < 5) {
+        value = '0' + value;
+    }
+    
+    // Limit to 5 digits
+    value = value.slice(-5);
+    
+    // Format as XX,XXX
+    const formattedValue = value.slice(0, 2) + ',' + value.slice(2);
+    
+    // Update input value
+    input.value = formattedValue;
+    
+    return formattedValue;
+}
+
+function formatarMoeda(valor) {
+    return `R$ ${valor.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+}
+
+function validarMetrosCubicos() {
+    const metrosCubicosInput = document.getElementById('metros-cubicos');
+    const valor = metrosCubicosInput.value.replace(',', '.');
+    
+    if (valor === '00,000' || parseFloat(valor) === "00,000") {
+        alert('Atenção: O campo Metros Cúbicos está nulo ou não preenchido!');
+        metrosCubicosInput.focus();
+        return false;
+    }
+    return true;
+}
+
+function calcularTributo() {
+    const metrosCubicosInput = document.getElementById('metros-cubicos');
+    const valorTributoInput = document.getElementById('valor-tributo');
+    
+    if (metrosCubicosInput.value) {
+        if (!validarMetrosCubicos()) {
+            valorTributoInput.value = "00,000";
+            return;
+        }
+        // Convert the formatted string (XX,XXX) to a number
+        const metrosCubicos = parseFloat(metrosCubicosInput.value.replace(',', '.'));
+        const valorCalculado = metrosCubicos * MULTIPLICADOR;
+        valorTributoInput.value = formatarMoeda(valorCalculado);
+    } else {
+        valorTributoInput.value = '';
+    }
+}
+
+function emitirGuia() {
+    if (!validarMetrosCubicos()) {
+        return;
+    }
+    alert('Emitindo guia...');
+}
+
+// Rest of the existing functions remain the same...
+
+        function processarXML(file) {
+            loadingModal.style.display = 'flex';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const xmlText = e.target.result;
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+                setTimeout(() => {
+                    // Extrair dados do XML
+                    const qVol = xmlDoc.querySelector('qVol')?.textContent || '';
+                    const dhEmi = xmlDoc.querySelector('dhEmi')?.textContent || '';
+
+                    // Processar a data (assumindo formato ISO)
+                    if (dhEmi) {
+                        const data = new Date(dhEmi);
+                        const periodoRef = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
+                        document.getElementById('periodo-referencia').value = periodoRef;
+                    }
+
+                    // Format metros cúbicos when setting from XML
+                    if (qVol) {
+                        const metrosCubicosInput = document.getElementById('metros-cubicos');
+                        metrosCubicosInput.value = formatarMetrosCubicos({ value: qVol.replace('.', '') });
+                        calcularTributo();
+                    }
+
+                    loadingModal.style.display = 'none';
+                    document.getElementById('manual-input').click();
+                }, 1000);
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function toggleMode(radio) {
+            const manualSection = document.getElementById('manual-section');
+            const xmlSection = document.getElementById('xml-section');
+            
+            if (radio.value === 'manual') {
+                manualSection.classList.remove('hidden');
+                xmlSection.classList.add('hidden');
+            } else {
+                manualSection.classList.add('hidden');
+                xmlSection.classList.remove('hidden');
+            }
+        }
+
+        function emitirGuia() {
+    // Primeiro valida se o campo está preenchido corretamente
+    if (!validarMetrosCubicos()) {
+        return;
+    }
+
+    // Pega os valores para mostrar no confirmação
+    const metrosCubicos = document.getElementById('metros-cubicos').value;
+    const valorTributo = document.getElementById('valor-tributo').value;
+    const periodoReferencia = document.getElementById('periodo-referencia').value;
+
+    // Mostra mensagem de confirmação com os dados
+    const confirmacao = confirm(
+        `Confirma a emissão da guia com os seguintes dados?\n\n` +
+        `Período de Referência: ${periodoReferencia}\n` +
+        `Metros Cúbicos: ${metrosCubicos}\n` +
+        `Valor do Tributo: ${valorTributo}\n\n` +
+        `Clique em OK para confirmar ou CANCELAR para revisar os dados.`
+    );
+
+    if (confirmacao) {
+        alert('Guia emitida com sucesso!');
+        // Aqui você pode adicionar o código para processar a emissão da guia
+    }
+}
+
+        function voltarPagina() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

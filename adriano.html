@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICMS Industria</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+           .container { max-width: 800px; margin: 0 auto; }
+        #calculos-container { display: flex; gap: 20px; justify-content: center; }
+        .calculo { border: 1px solid #ddd; padding: 15px; border-radius: 8px; flex: 1; max-width: 350px; }
+        label { display: block; margin-top: 10px; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; }
+        h1, h2 { text-align: center; }
+        h2 { margin-bottom: 10px; }
+        .date-selectors { margin-bottom: 20px; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #calculos-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .calculo {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            max-width: 350px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ICMS IND <span style="color: #5fc019; font-size: 45px;">Adriano Carmelo</span></h1>
+        
+        <div class="date-selectors">
+            <label>Período de Referência:</label>
+            <select id="mes-referencia">
+                <option value="01">Janeiro</option>
+                <option value="02">Fevereiro</option>
+                <option value="03">Março</option>
+                <option value="04">Abril</option>
+                <option value="05">Maio</option>
+                <option value="06">Junho</option>
+                <option value="07">Julho</option>
+                <option value="08">Agosto</option>
+                <option value="09">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+            </select>
+            <select id="ano-referencia">
+            </select>
+
+            <label>Data de Vencimento:</label>
+            <input type="date" id="data-vencimento">
+        </div>
+
+        <div id="calculos-container">
+            <div class="calculo" data-index="1">
+                <h2>Cálcular MVA 45,52%</h2>
+                <label>Valor dos produtos:</label>
+                <input type="text" class="vl-produtos" oninput="calcularCenario(1)">
+                <label>Porcentagem MVA:</label>
+                <input type="text" class="alq-mva" value="45,52%" readonly>
+                <label>Aliquota ICMS:</label>
+                <input type="text" class="alq-mva" value="17%" readonly>
+                <label>Valor Guia:</label>
+                <input type="text" class="valor-guia" readonly>
+            </div>
+
+            <div class="calculo" data-index="2">
+                <h2>Cálcular MVA 39,78%</h2>
+                <label>Valor dos produtos:</label>
+                <input type="text" class="vl-produtos" oninput="calcularCenario(2)">
+                <label>Porcentagem MVA:</label>
+                <input type="text" class="alq-mva" value="39,78%" readonly>
+                <label>Aliquota ICMS:</label>
+                <input type="text" class="alq-mva" value="17%" readonly>
+                <label>Valor Guia:</label>
+                <input type="text" class="valor-guia" readonly>
+            </div>
+        </div>
+
+        <h2>Total dos Valores Guia:</h2>
+        <input type="text" id="total-valor-guia" readonly>
+        <button class="voltar-btn" onclick="voltarPagina()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; margin-top: 20px;">Voltar</button>
+    </div>
+    <footer>
+        <h1>Automação com Puppeteer e Electron</h1>
+
+        <button onclick="executarScript('GUIA_A.js')">CRIAR A PARTIR DO DAS.js</button><br> <!-- Novo botão para o DAS -->
+
+        <p id="status"></p>
+    </footer>
+
+    <script src="renderer.js"></script>
+    <script>
+function calAno() {
+    // Obtém o ano atual
+    const anoAtual = new Date().getFullYear();
+    
+    // Obtém o elemento <select>
+    const selectAnoReferencia = document.getElementById('ano-referencia');
+    
+    // Cria os elementos <option> para o ano atual e o próximo
+    const optionAtual = document.createElement('option');
+    optionAtual.value = anoAtual;
+    optionAtual.textContent = anoAtual;
+    
+    const optionProximo = document.createElement('option');
+    optionProximo.value = anoAtual + 1;
+    optionProximo.textContent = anoAtual + 1;
+
+    const optionAnterior = document.createElement('option');
+    optionAnterior.value = anoAtual - 1;
+    optionAnterior.textContent = anoAtual - 1;
+    
+    // Adiciona as opções ao <select>
+    selectAnoReferencia.appendChild(optionAtual);
+    selectAnoReferencia.appendChild(optionProximo);
+}
+
+// Chama a função para adicionar os anos ao <select>
+calAno();
+
+
+        function selecionarCodigo(arquivo) {
+            // Redireciona para a página de detalhes correspondente
+            window.location.href = arquivo;
+        }
+
+        function voltarPagina() {
+            // Volta para a página anterior
+            window.history.back();
+        }
+
+        const resultados = [0, 0]; // Armazena os valores dos cálculos
+        const ALIQUOTA_ORIGEM = 0.17; // Alíquota fixa de 17%
+        const Periodo = "11/2024"
+        const IE = "13.625.883-2"
+
+
+        // Função para calcular os valores de um cenário
+        function calcularCenario(index) {
+            const container = document.querySelector(`.calculo[data-index="${index}"]`);
+            const vlProdutos = parseFloat(container.querySelector('.vl-produtos').value.replace(/[.]/g, '').replace(',', '.')) || 0;
+            const alqMvaInput = container.querySelector('.alq-mva').value;
+            const alqMva = parseFloat(alqMvaInput.replace(',', '.').replace('%', '')) || 0;
+
+            // Cálculo do resultado
+            const baseCalculo = vlProdutos * (1 + (alqMva / 100));
+            const alqIcms = 17 / 100; // Alíquota interna fixa de 17%
+            const valorCredito = baseCalculo * alqIcms;
+
+            // Valor Guia
+            const valorGuia = valorCredito - (vlProdutos * ALIQUOTA_ORIGEM);
+            container.querySelector('.valor-guia').value = valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+            // Atualiza o array de resultados
+            resultados[index - 1] = valorGuia;
+
+            // Recalcula o total
+            calcularTotal();
+        }
+
+        // Função para calcular o total dos valores guia
+        function calcularTotal() {
+            const total = resultados.reduce((acc, curr) => acc + curr, 0);
+            document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+/* Mantém seu CSS atual e adiciona: */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Para centralizar verticalmente */
+            margin: 0;
+            background-color: #f4f4f4; /* Adiciona um fundo para melhor visualização */
+        }
+
+        .codigo-container {
+            display: grid;
+            grid-template-columns: 1fr; /* Muda para 1 coluna */
+            gap: 20px;
+            margin: 20px;
+            max-width: 600px; /* Limita a largura máxima dos cartões */
+            width: 100%; /* Faz com que o container utilize a largura disponível */
+        }
+
+        .codigo-card {
+            background-color: #fff;
+            padding: 15px; /* Reduz o padding */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        .codigo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #C6E0B4;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-simples {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .voltar-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 20px;
+        }

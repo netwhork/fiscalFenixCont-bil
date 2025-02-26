@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Guias</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .codigo-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .codigo-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        .codigo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #C6E0B4;
+        }
+        .voltar-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .voltar-btn:hover {
+            background-color: #45A049;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Página inicial com os códigos -->
+    <div id="selecao-codigo" class="codigo-container">
+        <div class="codigo-card" id="codigo-7239" onclick="selecionarCodigo('fethab.html')">
+            <h2>Gerar guia de - <strong>FETHAB</strong></h2>
+            <p>7239 - CONTRIBUICAO FETHAB MADEIRA LEI 10818/19L</p>
+        </div>
+        <div class="codigo-card" id="codigo-8097" onclick="selecionarCodigo('Cipem.html')">
+            <h2>Gerar guia de - <strong>CIPEM</strong></h2>
+            <p>8097 - CONTRIBUICAO MADEIRA/IMAD</p>
+        </div>
+    </div>
+
+    <!-- Vinculando o arquivo main.js -->
+
+    <button class="voltar-btn" onclick="voltarPagina()"
+        style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; margin-top: 20px;">Voltar</button>
+    <script>
+
+        function selecionarCodigo(arquivo) {
+            // Redireciona para a página de detalhes correspondente
+            window.location.href = arquivo;
+        }
+
+        function voltarPagina() {
+            // Volta para a página anterior
+            window.history.back();
+        }
+
+        function selecionarCodigo(arquivo) {
+            // Redireciona para a página de detalhes correspondente
+            window.location.href = arquivo;
+        }
+
+
+    </script>
+</body>
+
+</html>
