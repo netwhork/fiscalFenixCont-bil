@@ -1450,7 +1450,17 @@ const cestMvaMap = {
   const mvaGrupos = new Map();
   const produtosSelecionadosMVA = new Map();
 
-  function getIcmsCredit(orig) {
+  function getIcmsCredit(produto) {
+    // Busca a tag pICMS dentro do produto
+    const pICMS = produto.querySelector('pICMS')?.textContent;
+    
+    // Se encontrou a tag pICMS, converte para número
+    if (pICMS) {
+      return parseFloat(pICMS) / 100; // Converte de porcentagem para decimal
+    } 
+    
+    // Se não encontrar a tag pICMS, mantém o comportamento original baseado na origem
+    const orig = produto.querySelector('orig')?.textContent || '0';
     return orig === '1' ? 0.04 : 0.07;
   }
 
@@ -1472,16 +1482,18 @@ const cestMvaMap = {
   }
 
   function createMVASelect(defaultValue = '', produtoIndex) {
+    const selectedMVA = produtosSelecionadosMVA.get(parseInt(produtoIndex)) || defaultValue;
+    
     return `
-      <select class="mva-select" onchange="atualizarMVASelect(this, ${produtoIndex})">
+      <select class="mva-select" id="select-mva-${produtoIndex}" onchange="atualizarMVASelect(this, ${produtoIndex})">
         <option value="">Selecione MVA</option>
         ${opcoesMVA.map(mva => `
-          <option value="${mva}" ${mva === defaultValue ? 'selected' : ''}>
+          <option value="${mva}" ${mva === selectedMVA ? 'selected' : ''}>
             ${mva}%
           </option>
         `).join('')}
       </select>
-      <span class="mva-display" id="mva-display-${produtoIndex}">${defaultValue ? defaultValue + '%' : ''}</span>
+      <span class="mva-display" id="mva-display-${produtoIndex}">${selectedMVA ? selectedMVA + '%' : ''}</span>
     `;
   }
 
@@ -1493,7 +1505,12 @@ const cestMvaMap = {
       mvaDisplay.textContent = selectedMVA ? selectedMVA + '%' : '';
     }
     
-    produtosSelecionadosMVA.set(produtoIndex, selectedMVA);
+    // Armazena a MVA selecionada para o produto específico
+    produtosSelecionadosMVA.set(parseInt(produtoIndex), selectedMVA);
+    
+    // Garante que o valor selecionado permaneça no dropdown
+    select.value = selectedMVA;
+    
     processarXML();
   }
 
@@ -1532,8 +1549,7 @@ const cestMvaMap = {
         const CEST = produto.querySelector('CEST')?.textContent;
         const vProd = parseFloat(produto.querySelector('vProd')?.textContent || '0');
         const vIPI = parseFloat(produto.querySelector('IPI vIPI')?.textContent || '0');
-        const orig = produto.querySelector('orig')?.textContent || '0';
-        const icmsCredit = getIcmsCredit(orig);
+        const icmsCredit = getIcmsCredit(produto);
 
         let mva = '';
         if (CEST && CEST !== 'Não especificado') {
@@ -1623,12 +1639,17 @@ const cestMvaMap = {
           const NCM = produto.querySelector('NCM')?.textContent || 'Não especificado';
           const CEST = produto.querySelector('CEST')?.textContent || 'Não especificado';
           const CFOP = produto.querySelector('CFOP')?.textContent || 'Não especificado';
+          const icmsCredit = getIcmsCredit(produto);
+          const pICMS = produto.querySelector('pICMS')?.textContent;
           const orig = produto.querySelector('orig')?.textContent || '0';
           const CST = produto.querySelector('CST')?.textContent || 'N/A';
           const origCST = `${orig}${CST}`;
-          const icmsCredit = getIcmsCredit(orig);
           const creditoValor = parseFloat(vProd) * icmsCredit;
-          const defaultMVA = CEST !== 'Não especificado' ? cestMvaMap[CEST] || '' : '';
+          
+          // Para produtos sem CEST, use o valor anteriormente selecionado se existir
+          const defaultMVA = CEST !== 'Não especificado' 
+                            ? cestMvaMap[CEST] || '' 
+                            : produtosSelecionadosMVA.get(parseInt(nItem)) || '';
 
           return `
             <div class="produto-item" id="produto-${nItem}">
@@ -1655,6 +1676,7 @@ const cestMvaMap = {
                   <div class="credit-info">
                     <strong>Crédito ICMS ${(icmsCredit * 100).toFixed(0)}%:</strong>
                     ${creditoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    ${pICMS ? `<br><small>(Alíquota do XML: ${pICMS}%)</small>` : ''}
                   </div>
                 </li>
                 <li><strong>Valor:</strong> ${vProd}</li>
@@ -1666,6 +1688,21 @@ const cestMvaMap = {
     `;
 
     document.getElementById('informacoes-nota').innerHTML = informacoes;
+    
+    // Após renderizar os selects, certifique-se de que os valores selecionados estejam mantidos
+    produtos.forEach((produto) => {
+      const nItem = produto.getAttribute('nItem');
+      const CEST = produto.querySelector('CEST')?.textContent;
+      
+      if (CEST === 'Não especificado' || !CEST) {
+        const storedMVA = produtosSelecionadosMVA.get(parseInt(nItem));
+        const selectElement = document.getElementById(`select-mva-${nItem}`);
+        
+        if (selectElement && storedMVA) {
+          selectElement.value = storedMVA;
+        }
+      }
+    });
   }
 
   function adicionarCalculo() {
@@ -1740,6 +1777,11 @@ const cestMvaMap = {
   window.onload = () => {
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('xml-upload');
+
+    // Se produtosSelecionadosMVA não existir, inicialize-o
+    if (!window.produtosSelecionadosMVA) {
+      window.produtosSelecionadosMVA = new Map();
+    }
 
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
