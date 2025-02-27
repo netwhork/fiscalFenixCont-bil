@@ -6,26 +6,6 @@
   <title>Calculadora MVA Dinâmica</title>
 
   <style>
-     .mva-select {
-      width: 120px;
-      padding: 2px 5px;
-      margin-left: 5px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-    }
-
-    .icms-credit {
-      color: #2c3e50;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-
-    .credit-info {
-      background-color: #e8f5e9;
-      padding: 5px;
-      border-radius: 4px;
-      margin-top: 5px;
-    }
     * {
       box-sizing: border-box;
       margin: 0;
@@ -110,9 +90,16 @@
     .xml {
       text-align: center;
       background-color: #f8f9fa;
-      padding: 20px;
+      padding: 30px;
       border-radius: 5px;
       margin-bottom: 20px;
+      border: 2px dashed #ccc;
+      transition: all 0.3s ease;
+    }
+    
+    .xml.dragover {
+      background-color: #e0f7fa;
+      border-color: #4CAF50;
     }
 
     label {
@@ -178,6 +165,59 @@
       background: #555;
     }
 
+    .mva-select {
+      width: 120px;
+      padding: 2px 5px;
+      margin-left: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+
+    .mva-display {
+      display: inline-block;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-left: 5px;
+    }
+
+    .icms-credit {
+      color: #2c3e50;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+
+    .credit-info {
+      background-color: #e8f5e9;
+      padding: 5px;
+      border-radius: 4px;
+      margin-top: 5px;
+    }
+    
+    .calculos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    
+    .total-section {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f1f8e9;
+      border-radius: 8px;
+      border: 1px solid #4CAF50;
+    }
+    
+    .total-section h2 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .total-valor-guia {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
     @media (max-width: 1024px) {
       .main-content {
         grid-template-columns: 1fr;
@@ -185,6 +225,25 @@
       
       .info-section {
         max-height: 600px;
+      }
+      
+      .calculos-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .main-content {
+        gap: 10px;
+      }
+      
+      .buttons button {
+        width: 100%;
+        margin: 5px 0;
       }
     }
   </style>
@@ -195,15 +254,20 @@
     
     <div class="main-content">
       <div class="calculadora-section">
-        <div class="xml">
-          <label for="xml-upload">Arraste um arquivo e solte-o aqui</label>
+        <div class="xml" id="drop-zone">
+          <label for="xml-upload">Arraste um arquivo XML e solte-o aqui</label>
           <input type="file" id="xml-upload" accept=".xml">
         </div>
 
         <button onclick="processarXML()">Processar XML</button>
 
-        <div id="calculos-container">
+        <div id="calculos-container" class="calculos-grid">
           <!-- Blocos de cálculo dinâmicos serão inseridos aqui -->
+        </div>
+
+        <div class="total-section">
+          <h2>Total dos Valores Guia:</h2>
+          <input type="text" id="total-valor-guia" class="total-valor-guia" readonly>
         </div>
 
         <div class="buttons">
@@ -211,9 +275,6 @@
           <button id="remover-mva" onclick="removerUltimoCalculo()">Remover MVA</button>
           <button class="voltar-btn" onclick="voltarPagina()">Voltar</button>
         </div>
-
-        <h2>Total dos Valores Guia:</h2>
-        <input type="text" id="total-valor-guia" readonly>
       </div>
 
       <div class="info-section" id="informacoes-nota">
@@ -224,32 +285,32 @@
 
 <script>
   function voltarPagina() {
-  window.history.back();
-}
-
-function formatarValorProdutos(input) {
-  let valor = input.replace(/\D/g, '');
-  if (!valor) return '0,00';
-  while (valor.length < 3) {
-    valor = '0' + valor;
+    window.history.back();
   }
-  const tamanho = valor.length;
-  const valorFormatado = valor.slice(0, tamanho - 2) + ',' + valor.slice(tamanho - 2);
-  return valorFormatado;
-}
 
-const opcoesMVA = [
-  "18,00", "19,28", "27,61", "30,41", "30,61", "33,47",
-  "33,69", "34,23", "34,68", "35,00", "35,45", "35,93",
-  "37,30", "38,14", "38,56", "39,43", "39,78", "39,91",
-  "39,99", "40,21", "40,33", "40,69", "40,94", "41,87",
-  "41,93", "42,07", "42,08", "42,36", "45,02", "45,52",
-  "46,05", "46,15", "46,48", "47,05", "47,17", "47,30",
-  "47,99", "49,31", "49,73", "50,39", "51,47", "52,14",
-  "53,28", "53,86", "56,40", "57,97", "59,64", "61,78",
-  "62,27", "65,29", "66,19", "67,49", "73,63", "88,72",
-  "94,70"
-];
+  function formatarValorProdutos(input) {
+    let valor = input.replace(/\D/g, '');
+    if (!valor) return '0,00';
+    while (valor.length < 3) {
+      valor = '0' + valor;
+    }
+    const tamanho = valor.length;
+    const valorFormatado = valor.slice(0, tamanho - 2) + ',' + valor.slice(tamanho - 2);
+    return valorFormatado;
+  }
+
+  const opcoesMVA = [
+    "18,00", "19,28", "27,61", "30,41", "30,61", "33,47",
+    "33,69", "34,23", "34,68", "35,00", "35,45", "35,93",
+    "37,30", "38,14", "38,56", "39,43", "39,78", "39,91",
+    "39,99", "40,21", "40,33", "40,69", "40,94", "41,87",
+    "41,93", "42,07", "42,08", "42,36", "45,02", "45,52",
+    "46,05", "46,15", "46,48", "47,05", "47,17", "47,30",
+    "47,99", "49,31", "49,73", "50,39", "51,47", "52,14",
+    "53,28", "53,86", "56,40", "57,97", "59,64", "61,78",
+    "62,27", "65,29", "66,19", "67,49", "73,63", "88,72",
+    "94,70"
+  ];
 
 // Dados mapeados de CEST para MVA
 const cestMvaMap = {
@@ -1385,283 +1446,275 @@ const cestMvaMap = {
 
 };
 
-let resultados = [];
-const mvaGrupos = new Map();
+  let resultados = [];
+  const mvaGrupos = new Map();
+  const produtosSelecionadosMVA = new Map();
 
-function getIcmsCredit(orig) {
-  return orig === '1' ? 0.04 : 0.07;
-}
+  function getIcmsCredit(orig) {
+    return orig === '1' ? 0.04 : 0.07;
+  }
 
-function calcularCenario(mva, valores, icmsCredit) {
-  const vlProdutos = valores.valorTotal;
-  const vlIpi = valores.ipiTotal;
-  const alqMva = parseFloat(mva.replace(',', '.'));
-  const alqOrigem = icmsCredit;
+  function calcularCenario(mva, valores, icmsCredit) {
+    const vlProdutos = valores.valorTotal;
+    const vlIpi = valores.ipiTotal;
+    const alqMva = parseFloat(mva.replace(',', '.'));
+    const alqOrigem = icmsCredit;
 
-  const resultado = vlProdutos + vlIpi;
-  const baseCalculo = resultado * (1 + (alqMva / 100));
-  const alqIcms = 17 / 100;
-  const valorCredito = baseCalculo * alqIcms;
+    const resultado = vlProdutos + vlIpi;
+    const baseCalculo = resultado * (1 + (alqMva / 100));
+    const alqIcms = 17 / 100;
+    const valorCredito = baseCalculo * alqIcms;
 
-  return {
-    valorGuia: valorCredito - (vlProdutos * alqOrigem),
-    icmsCredit: alqOrigem * 100
-  };
-}
+    return {
+      valorGuia: valorCredito - (vlProdutos * alqOrigem),
+      icmsCredit: alqOrigem * 100
+    };
+  }
 
-function createMVASelect(defaultValue = '') {
-  return `
-    <select class="mva-select" onchange="atualizarMVASelect(this)">
-      <option value="">Selecione MVA</option>
-      ${opcoesMVA.map(mva => `
-        <option value="${mva}" ${mva === defaultValue ? 'selected' : ''}>
-          ${mva}%
-        </option>
-      `).join('')}
-    </select>
-  `;
-}
+  function createMVASelect(defaultValue = '', produtoIndex) {
+    return `
+      <select class="mva-select" onchange="atualizarMVASelect(this, ${produtoIndex})">
+        <option value="">Selecione MVA</option>
+        ${opcoesMVA.map(mva => `
+          <option value="${mva}" ${mva === defaultValue ? 'selected' : ''}>
+            ${mva}%
+          </option>
+        `).join('')}
+      </select>
+      <span class="mva-display" id="mva-display-${produtoIndex}">${defaultValue ? defaultValue + '%' : ''}</span>
+    `;
+  }
 
-function atualizarMVASelect(select) {
-  const produtoItem = select.closest('.produto-item');
-  if (produtoItem) {
+  function atualizarMVASelect(select, produtoIndex) {
+    const selectedMVA = select.value;
+    const mvaDisplay = document.getElementById(`mva-display-${produtoIndex}`);
+    
+    if (mvaDisplay) {
+      mvaDisplay.textContent = selectedMVA ? selectedMVA + '%' : '';
+    }
+    
+    produtosSelecionadosMVA.set(produtoIndex, selectedMVA);
     processarXML();
   }
-}
 
-function atualizarMVA(cest, novoValor, produtoIndex) {
-  const produto = document.querySelector(`#produto-${produtoIndex}`);
-  if (produto) {
-    const mvaInput = produto.querySelector('.mva-input');
-    if (mvaInput) {
-      mvaInput.value = novoValor;
+  function atualizarMVA(cest, novoValor, produtoIndex) {
+    const produto = document.querySelector(`#produto-${produtoIndex}`);
+    if (produto) {
+      const mvaInput = produto.querySelector('.mva-input');
+      if (mvaInput) {
+        mvaInput.value = novoValor;
+      }
     }
-  }
-  processarXML();
-}
-
-function processarXML() {
-  const arquivoInput = document.getElementById('xml-upload');
-  const arquivo = arquivoInput.files[0];
-
-  if (!arquivo) {
-    alert("Por favor, selecione um arquivo XML.");
-    return;
+    processarXML();
   }
 
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    const xmlConteudo = event.target.result;
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlConteudo, "application/xml");
+  function processarXML() {
+    const arquivoInput = document.getElementById('xml-upload');
+    const arquivo = arquivoInput.files[0];
 
-    mvaGrupos.clear();
-    resultados = [];
+    if (!arquivo) {
+      alert("Por favor, selecione um arquivo XML.");
+      return;
+    }
 
-    const produtos = xmlDoc.querySelectorAll('det');
-    produtos.forEach(produto => {
-      const CEST = produto.querySelector('CEST')?.textContent;
-      const vProd = parseFloat(produto.querySelector('vProd')?.textContent || '0');
-      const vIPI = parseFloat(produto.querySelector('IPI vIPI')?.textContent || '0');
-      const orig = produto.querySelector('orig')?.textContent || '0';
-      const icmsCredit = getIcmsCredit(orig);
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const xmlConteudo = event.target.result;
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlConteudo, "application/xml");
 
-      let mva = '';
-      if (CEST && CEST !== 'Não especificado') {
-        mva = cestMvaMap[CEST] || '';
-        const mvaInput = document.querySelector(`#mva-${CEST}`);
-        if (mvaInput && mvaInput.value) {
-          mva = mvaInput.value;
-        }
-      } else {
-        const mvaSelect = document.querySelector(`#produto-${produto.getAttribute('nItem')} .mva-select`);
-        if (mvaSelect) {
-          mva = mvaSelect.value;
-        }
-      }
+      mvaGrupos.clear();
+      resultados = [];
 
-      if (mva) {
-        if (!mvaGrupos.has(mva)) {
-          mvaGrupos.set(mva, {
-            valorTotal: 0,
-            ipiTotal: 0,
-            icmsCredit: icmsCredit
-          });
-        }
-        const grupo = mvaGrupos.get(mva);
-        grupo.valorTotal += vProd;
-        grupo.ipiTotal += vIPI;
-      }
-    });
-
-    const container = document.getElementById('calculos-container');
-    container.innerHTML = '';
-
-    mvaGrupos.forEach((valores, mva) => {
-      const bloco = document.createElement('div');
-      bloco.classList.add('calculo');
-
-      const resultado = calcularCenario(mva, valores, valores.icmsCredit);
-      resultados.push(resultado.valorGuia);
-      
-      const creditoValor = valores.valorTotal * valores.icmsCredit;
-
-      bloco.innerHTML = `
-        <h2>Cálculo MVA ${mva}%</h2>
-        <label>Valor dos produtos:</label>
-        <input type="text" class="vl-produtos" value="${valores.valorTotal.toFixed(2)}" readonly>
-        <label>IPI e Despesas:</label>
-        <input type="text" class="vl-ipi" value="${valores.ipiTotal.toFixed(2)}" readonly>
-        <div class="credit-info">
-          <label>Crédito ICMS ${(valores.icmsCredit * 100).toFixed(0)}%:</label>
-          <span>${creditoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-        </div>
-        <label>Valor Guia:</label>
-        <input type="text" class="valor-guia" value="${resultado.valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}" readonly>
-      `;
-
-      container.appendChild(bloco);
-    });
-
-    const total = resultados.reduce((acc, curr) => acc + curr, 0);
-    document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-
-    atualizarInformacoesNota(xmlDoc, produtos);
-  };
-
-  reader.readAsText(arquivo);
-}
-
-function atualizarInformacoesNota(xmlDoc, produtos) {
-  const vNF = xmlDoc.querySelector('vNF');
-  const emitente = xmlDoc.querySelector('emit > xNome');
-  const destinatario = xmlDoc.querySelector('dest > xNome');
-  const nNF = xmlDoc.querySelector('nNF');
-  const chNFe = xmlDoc.querySelector('chNFe');
-
-  const informacoes = `
-    <div class="nota-fiscal-info">
-      <h3>Informações da Nota Fiscal</h3>
-      <p><strong>Número da NF:</strong> ${nNF ? nNF.textContent : 'Não encontrado'}</p>
-      <p><strong>Chave NF-e:</strong> ${chNFe ? chNFe.textContent : 'Não encontrado'}</p>
-      <p><strong>Emitente:</strong> ${emitente ? emitente.textContent : 'Não encontrado'}</p>
-      <p><strong>Destinatário:</strong> ${destinatario ? destinatario.textContent : 'Não encontrado'}</p>
-      <p><strong>Valor da Nota (vNF):</strong> ${vNF ? vNF.textContent : 'Não encontrado'}</p>
-    </div>
-    <div class="produtos-info">
-      <h2>Informações dos Produtos</h2>
-      ${Array.from(produtos).map((produto, index) => {
-        const nItem = produto.getAttribute('nItem');
-        const xProd = produto.querySelector('xProd')?.textContent || 'Não especificado';
-        const vProd = produto.querySelector('vProd')?.textContent || 'Não especificado';
-        const NCM = produto.querySelector('NCM')?.textContent || 'Não especificado';
-        const CEST = produto.querySelector('CEST')?.textContent || 'Não especificado';
-        const CFOP = produto.querySelector('CFOP')?.textContent || 'Não especificado';
+      const produtos = xmlDoc.querySelectorAll('det');
+      produtos.forEach((produto, index) => {
+        const produtoIndex = produto.getAttribute('nItem');
+        const CEST = produto.querySelector('CEST')?.textContent;
+        const vProd = parseFloat(produto.querySelector('vProd')?.textContent || '0');
+        const vIPI = parseFloat(produto.querySelector('IPI vIPI')?.textContent || '0');
         const orig = produto.querySelector('orig')?.textContent || '0';
-        const CST = produto.querySelector('CST')?.textContent || 'N/A';
-        const origCST = `${orig}${CST}`;
         const icmsCredit = getIcmsCredit(orig);
-        const creditoValor = parseFloat(vProd) * icmsCredit;
-        const defaultMVA = CEST !== 'Não especificado' ? cestMvaMap[CEST] || '' : '';
 
-        return `
-          <div class="produto-item" id="produto-${nItem}">
-            <p><strong>Produto ${nItem}</strong></p>
-            <ul>
-              <li><strong>Produto:</strong> ${xProd}</li>
-              <li><strong>NCM:</strong> ${NCM}</li>
-              <li>
-                <strong>CEST:</strong> ${CEST}
-                ${CEST === 'Não especificado' 
-                  ? createMVASelect(defaultMVA)
-                  : `<input type="text" 
-                       class="mva-input" 
-                       id="mva-${CEST}"
-                       value="${defaultMVA}"
-                       placeholder="MVA %"
-                       onchange="atualizarMVA('${CEST}', this.value, ${index})">`
-                }
-              </li>
-              <li><strong>CFOP:</strong> ${CFOP}</li>
-              <li>
-                <strong>CST:</strong> ${origCST}
-                <div class="credit-info">
-                  <strong>Crédito ICMS ${(icmsCredit * 100).toFixed(0)}%:</strong>
-                  ${creditoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-              </li>
-              <li><strong>Valor:</strong> ${vProd}</li>
-            </ul>
+        let mva = '';
+        if (CEST && CEST !== 'Não especificado') {
+          const mvaInput = document.querySelector(`#mva-${CEST}`);
+          mva = mvaInput && mvaInput.value ? mvaInput.value : cestMvaMap[CEST] || '';
+        } else {
+          mva = produtosSelecionadosMVA.get(parseInt(produtoIndex)) || '';
+        }
+
+        if (mva) {
+          if (!mvaGrupos.has(mva)) {
+            mvaGrupos.set(mva, {
+              valorTotal: 0,
+              ipiTotal: 0,
+              icmsCredit: icmsCredit
+            });
+          }
+          const grupo = mvaGrupos.get(mva);
+          grupo.valorTotal += vProd;
+          grupo.ipiTotal += vIPI;
+        }
+      });
+
+      const container = document.getElementById('calculos-container');
+      container.innerHTML = '';
+
+      mvaGrupos.forEach((valores, mva) => {
+        const bloco = document.createElement('div');
+        bloco.classList.add('calculo');
+
+        const resultado = calcularCenario(mva, valores, valores.icmsCredit);
+        resultados.push(resultado.valorGuia);
+        
+        const creditoValor = valores.valorTotal * valores.icmsCredit;
+
+        bloco.innerHTML = `
+          <h2>Cálculo MVA ${mva}%</h2>
+          <label>Valor dos produtos:</label>
+          <input type="text" class="vl-produtos" value="${valores.valorTotal.toFixed(2)}" readonly>
+          <label>IPI e Despesas:</label>
+          <input type="text" class="vl-ipi" value="${valores.ipiTotal.toFixed(2)}" readonly>
+          <div class="credit-info">
+            <label>Crédito ICMS ${(valores.icmsCredit * 100).toFixed(0)}%:</label>
+            <span>${creditoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
           </div>
+          <label>Valor Guia:</label>
+          <input type="text" class="valor-guia" value="${resultado.valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}" readonly>
         `;
-      }).join('')}
-    </div>
-  `;
 
-  document.getElementById('informacoes-nota').innerHTML = informacoes;
-}
+        container.appendChild(bloco);
+      });
 
-function adicionarCalculo() {
-  const container = document.getElementById('calculos-container');
-  const novoBloco = document.createElement('div');
-  novoBloco.classList.add('calculo');
-  novoBloco.innerHTML = `
-    <h2>Novo Cálculo MVA</h2>
-    <label>MVA (%):</label>
-    <select class="mva-manual">
-      ${opcoesMVA.map(mva => `<option value="${mva}">${mva}%</option>`).join('')}
-    </select>
-    <label>Valor dos produtos:</label>
-    <input type="text" class="vl-produtos-manual" value="0.00">
-    <label>IPI e Despesas:</label>
-    <input type="text" class="vl-ipi-manual" value="0.00">
-    <label>Crédito ICMS:</label>
-    <select class="icms-credit-manual">
-      <option value="0.07">7%</option>
-      <option value="0.04">4%</option>
-    </select>
-    <button onclick="calcularManual(this)">Calcular</button>
-    <label>Valor Guia:</label>
-    <input type="text" class="valor-guia-manual" readonly>
-  `;
-  container.appendChild(novoBloco);
-}
+      const total = resultados.reduce((acc, curr) => acc + curr, 0);
+      document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
-function calcularManual(btn) {
-  const bloco = btn.closest('.calculo');
-  const mva = bloco.querySelector('.mva-manual').value;
-  const vlProdutos = parseFloat(bloco.querySelector('.vl-produtos-manual').value.replace(',', '.'));
-  const vlIpi = parseFloat(bloco.querySelector('.vl-ipi-manual').value.replace(',', '.'));
-  const icmsCredit = parseFloat(bloco.querySelector('.icms-credit-manual').value);
-  
-  const valores = {
-    valorTotal: vlProdutos,
-    ipiTotal: vlIpi,
-    icmsCredit: icmsCredit
-  };
-  
-  const resultado = calcularCenario(mva, valores, icmsCredit);
-  bloco.querySelector('.valor-guia-manual').value = resultado.valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-  
-  // Atualizar o total
-  const guias = document.querySelectorAll('.valor-guia, .valor-guia-manual');
-  let total = 0;
-  guias.forEach(guia => {
-    if (guia.value) {
-      total += parseFloat(guia.value.replace('.', '').replace(',', '.'));
-    }
-  });
-  
-  document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-}
+      atualizarInformacoesNota(xmlDoc, produtos);
+    };
 
-function removerUltimoCalculo() {
-  const container = document.getElementById('calculos-container');
-  const blocos = container.querySelectorAll('.calculo');
-  if (blocos.length > 0) {
-    container.removeChild(blocos[blocos.length - 1]);
+    reader.readAsText(arquivo);
+  }
+
+  function atualizarInformacoesNota(xmlDoc, produtos) {
+    const vNF = xmlDoc.querySelector('vNF');
+    const emitente = xmlDoc.querySelector('emit > xNome');
+    const destinatario = xmlDoc.querySelector('dest > xNome');
+    const nNF = xmlDoc.querySelector('nNF');
+    const vICMSST = xmlDoc.querySelector('vICMSST');
+    const chNFe = xmlDoc.querySelector('chNFe');
+    
+    const informacoes = `
+      <div class="nota-fiscal-info">
+        <h3>Informações da Nota Fiscal</h3>
+        <p><strong>Número da NF:</strong> ${nNF ? nNF.textContent : 'Não encontrado'}</p>
+        <p><strong>Chave NF-e:</strong> ${chNFe ? chNFe.textContent : 'Não encontrado'}</p>
+        <p><strong>Emitente:</strong> ${emitente ? emitente.textContent : 'Não encontrado'}</p>
+        <p><strong>Destinatário:</strong> ${destinatario ? destinatario.textContent : 'Não encontrado'}</p>
+        <p><strong>Valor da Nota (vNF):</strong> ${vNF ? vNF.textContent : 'Não encontrado'}</p>
+        <p><strong>ICMS ST destacado:</strong> ${vICMSST ? vICMSST.textContent : 'Sem destaque'}</p>
+
+      </div>
+      <div class="produtos-info">
+        <h2>Informações dos Produtos</h2>
+        ${Array.from(produtos).map((produto, index) => {
+          const nItem = produto.getAttribute('nItem');
+          const xProd = produto.querySelector('xProd')?.textContent || 'Não especificado';
+          const vProd = produto.querySelector('vProd')?.textContent || 'Não especificado';
+          const NCM = produto.querySelector('NCM')?.textContent || 'Não especificado';
+          const CEST = produto.querySelector('CEST')?.textContent || 'Não especificado';
+          const CFOP = produto.querySelector('CFOP')?.textContent || 'Não especificado';
+          const orig = produto.querySelector('orig')?.textContent || '0';
+          const CST = produto.querySelector('CST')?.textContent || 'N/A';
+          const origCST = `${orig}${CST}`;
+          const icmsCredit = getIcmsCredit(orig);
+          const creditoValor = parseFloat(vProd) * icmsCredit;
+          const defaultMVA = CEST !== 'Não especificado' ? cestMvaMap[CEST] || '' : '';
+
+          return `
+            <div class="produto-item" id="produto-${nItem}">
+              <p><strong>Produto ${nItem}</strong></p>
+              <ul>
+                <li><strong>Produto:</strong> ${xProd}</li>
+                <li><strong>NCM:</strong> ${NCM}</li>
+                <li>
+                  <strong>CEST:</strong> ${CEST}
+                  ${CEST === 'Não especificado' 
+                    ? createMVASelect(defaultMVA, nItem)
+                    : `<input type="text" 
+                        class="mva-input" 
+                        id="mva-${CEST}"
+                        value="${defaultMVA}"
+                        placeholder="MVA %"
+                        onchange="atualizarMVA('${CEST}', this.value, ${index})">
+                      <span class="mva-display">${defaultMVA}%</span>`
+                  }
+                </li>
+                <li><strong>CFOP:</strong> ${CFOP}</li>
+                <li>
+                  <strong>CST:</strong> ${origCST}
+                  <div class="credit-info">
+                    <strong>Crédito ICMS ${(icmsCredit * 100).toFixed(0)}%:</strong>
+                    ${creditoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </li>
+                <li><strong>Valor:</strong> ${vProd}</li>
+              </ul>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    document.getElementById('informacoes-nota').innerHTML = informacoes;
+  }
+
+  function adicionarCalculo() {
+    const container = document.getElementById('calculos-container');
+    const novoBloco = document.createElement('div');
+    novoBloco.classList.add('calculo');
+    novoBloco.innerHTML = `
+      <h2>Novo Cálculo MVA</h2>
+      <label>MVA (%):</label>
+      <select class="mva-manual">
+        ${opcoesMVA.map(mva => `<option value="${mva}">${mva}%</option>`).join('')}
+      </select>
+      <label>Valor dos produtos:</label>
+      <input type="text" class="vl-produtos-manual" value="0,00">
+      <label>IPI e Despesas:</label>
+      <input type="text" class="vl-ipi-manual" value="0,00">
+      <label>Crédito ICMS:</label>
+      <select class="icms-credit-manual">
+        <option value="0.07">7%</option>
+        <option value="0.04">4%</option>
+      </select>
+      <button onclick="calcularManual(this)">Calcular</button>
+      <label>Valor Guia:</label>
+      <input type="text" class="valor-guia-manual" readonly>
+    `;
+    container.appendChild(novoBloco);
+  }
+
+  function calcularManual(btn) {
+    const bloco = btn.closest('.calculo');
+    const mva = bloco.querySelector('.mva-manual').value;
+    const vlProdutos = parseFloat(bloco.querySelector('.vl-produtos-manual').value.replace('.', '').replace(',', '.'));
+    const vlIpi = parseFloat(bloco.querySelector('.vl-ipi-manual').value.replace('.', '').replace(',', '.'));
+    const icmsCredit = parseFloat(bloco.querySelector('.icms-credit-manual').value);
+    
+    const valores = {
+      valorTotal: vlProdutos,
+      ipiTotal: vlIpi,
+      icmsCredit: icmsCredit
+    };
+    
+    const resultado = calcularCenario(mva, valores, icmsCredit);
+    bloco.querySelector('.valor-guia-manual').value = resultado.valorGuia.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     
     // Atualizar o total
+    atualizarTotal();
+  }
+
+  function atualizarTotal() {
     const guias = document.querySelectorAll('.valor-guia, .valor-guia-manual');
     let total = 0;
     guias.forEach(guia => {
@@ -1672,35 +1725,54 @@ function removerUltimoCalculo() {
     
     document.getElementById('total-valor-guia').value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   }
-}
 
-window.onload = () => {
-  const dropZone = document.getElementById('xml-upload');
-
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.add('dragover');
-  });
-
-  dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove('dragover');
-  });
-
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove('dragover');
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      dropZone.files = files;
-      processarXML();
+  function removerUltimoCalculo() {
+    const container = document.getElementById('calculos-container');
+    const blocos = container.querySelectorAll('.calculo');
+    if (blocos.length > 0) {
+      container.removeChild(blocos[blocos.length - 1]);
+      
+      // Atualizar o total
+      atualizarTotal();
     }
-  });
-};
+  }
+
+  window.onload = () => {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('xml-upload');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('dragover');
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type === 'text/xml' || files[0].name.endsWith('.xml')) {
+        fileInput.files = files;
+        processarXML();
+      } else {
+        alert("Por favor, selecione apenas arquivos XML.");
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        processarXML();
+      }
+    });
+  };
 </script>
 </body>
 </html>
